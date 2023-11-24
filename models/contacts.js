@@ -1,14 +1,45 @@
-// const fs = require('fs/promises')
+const Contact = require("../models/cont.js");
 
-const listContacts = async () => {}
 
-const getContactById = async (contactId) => {}
+async function listContacts() {
+  return await Contact.find();
+}
 
-const removeContact = async (contactId) => {}
+async function getContactById(contactId) {
+  return await Contact.findById(contactId);
+}
 
-const addContact = async (body) => {}
+async function removeContact(contactId) {
+  
+  return await Contact.findByIdAndRemove(contactId);
+}
 
-const updateContact = async (contactId, body) => {}
+async function addContact(name, email, phone) {
+  
+  return await Contact.create({name, email, phone});
+}
+
+const updateContact = async (contactId, body) => {
+  return await Contact.findByIdAndUpdate(contactId, body, { new: true });
+
+};
+
+
+async function getBuId(contactId) {
+  return await Contact.findById(contactId);
+
+};
+
+
+async function updateStatusContact (contactId, body) {
+  const contact = await Contact.findById(contactId);
+  if (!contact) {
+    return null;
+  }
+  contact.favorite = body.favorite;// оновлюємо
+  const updatedContact = await contact.save();
+  return updatedContact;
+}
 
 module.exports = {
   listContacts,
@@ -16,4 +47,6 @@ module.exports = {
   removeContact,
   addContact,
   updateContact,
-}
+  getBuId,
+  updateStatusContact,
+};
