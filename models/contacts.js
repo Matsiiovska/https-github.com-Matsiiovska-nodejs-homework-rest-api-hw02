@@ -1,75 +1,45 @@
-const fs = require("fs").promises;
-const path = require("path");
-const { v4: uuidv4 } = require('uuid');
-const contactsPath = path.resolve(__dirname, "contacts.json");
+const Contact = require("../models/cont.js");
+
 
 async function listContacts() {
-  const data = await fs.readFile(contactsPath, 'utf-8');
-  const contacts = JSON.parse(data);
-  return contacts;
+  return await Contact.find();
 }
 
 async function getContactById(contactId) {
-  const contacts = await listContacts();
-  const contact = contacts.find((c) => c.id === contactId);
-  return contact || null;
+  return await Contact.findById(contactId);
 }
 
 async function removeContact(contactId) {
-  const contacts = await listContacts();
-  const index = contacts.findIndex(contact => contact.id === contactId);
-  if (index === -1) {
-    return null;
-  }
-  const [removedContact] = contacts.splice(index, 1);
-  await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
-  return removedContact;
+  
+  return await Contact.findByIdAndRemove(contactId);
 }
 
 async function addContact(name, email, phone) {
-  const contacts = await fs.readFile(contactsPath, 'utf-8');
-  const contactsArray = JSON.parse(contacts);
-
-  // Генеруємо новий ідентифікатор для контакту
-  const id = uuidv4();
-
-  // Створюємо об'єкт нового контакту
-  const newContact = {
-    id,
-    name,
-    email,
-    phone,
-  };
-
-  // Додаємо новий контакт до списку
-  contactsArray.push(newContact);
-
-  // Зберігаємо оновлений список контактів у файлі
-  await fs.writeFile(contactsPath, JSON.stringify(contactsArray, null, 2));
-
-  return newContact;
+  
+  return await Contact.create({name, email, phone});
 }
 
 const updateContact = async (contactId, body) => {
-  const contacts = await listContacts();
-  const index = contacts.findIndex(contact => contact.id === contactId);
-
-  if (index === -1) {
-    return null;
-  }
-  contacts[index] = { ...contacts[index], ...body };
-
-  await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
-  return contacts[index];
+  return await Contact.findByIdAndUpdate(contactId, body, { new: true });
 
 };
+
 
 async function getBuId(contactId) {
-   const contacts = await listContacts();
-  const contact = contacts.find((c) => c.id === contactId);
-  return contact || null;
+  return await Contact.findById(contactId);
 
 };
+
+
+async function updateStatusContact (contactId, body) {
+  const contact = await Contact.findById(contactId);
+  if (!contact) {
+    return null;
+  }
+  contact.favorite = body.favorite;// оновлюємо
+  const updatedContact = await contact.save();
+  return updatedContact;
+}
 
 module.exports = {
   listContacts,
@@ -78,4 +48,5 @@ module.exports = {
   addContact,
   updateContact,
   getBuId,
+  updateStatusContact,
 };
