@@ -23,7 +23,12 @@ const userSchema = new Schema({
     token: {
         type: String,
         default: ""
-    }
+    },
+    avatarURL: {
+    type: String,
+    required: true,
+  }
+    
 }, { versionKey: false, timestamps: true });
 
 
@@ -36,15 +41,15 @@ userSchema.post("save", (error, data, next)=> {
 const registerSchema = Joi.object({
 name: Joi.string().required(),
   email: Joi.string().pattern(emailRegexp).required(),
-  password: Joi.string().min().required(),
-  subscription: Joi.string().required(), 
+  password: Joi.string().min(6).required(),
+  subscription: Joi.string(), 
 })
 
 
 const loginSchema = Joi.object({
   email: Joi.string().pattern(emailRegexp).required(),
   password: Joi.string().min(6).required(),
-  subscription: Joi.string().required(), 
+  subscription: Joi.string(), 
 })
 
 

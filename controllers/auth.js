@@ -4,11 +4,17 @@ const HttpError = require("../helpers/HttpError");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { id } = require("@hapi/joi/lib/base");
+const gravatar = require("gravatar");
+const path = require("path");
+const fs = require('fs/promises');
+const Jimp = require('jimp');
 
 require("dotenv").config();
 
 
 const { SECRET_KEY } = process.env;
+
+const avatarDir = path.join(__dirname, "../", "public", "avatars");
 
 const payload = {
     id: "63fe4a5a68b27c947e28495b"
@@ -38,7 +44,10 @@ const register = async (req, res) => {
     }
 
     const hashPassword = await bcrypt.hash(password, 10);
-    const newUser = await User.create( {...req.body, password: hashPassword} );
+
+    const avatarURL = gravatar.url(email);
+
+    const newUser = await User.create( {...req.body, password: hashPassword, avatarURL} );
     
     res.status(201).json({
         email: newUser.email,
@@ -86,9 +95,33 @@ const logout = async (req, res) => {
 
 }
 
+const updateAvatar = async (req, res) => {
+    const { _id } = req.user;
+    const { path: tempUpload, originalname } = req.file;
+    const filename = `${_id}_${originalname}`;
+    const resultUpload = path.join(avatarDir, filename);
+    try {
+        const image = await Jimp.read(tempUpload);
+        await image.resize(250, 250).write(resultUpload);
+    } catch (error) {
+        console.error('Error resizing avatar:', error);
+        return res.status(500).json({ error: 'Error resizing avatar' });
+    }
+    await fs.unlink(tempUpload);
+    const avatarURL = path.join("avatars", filename);
+    await User.findByIdAndUpdate(_id, { avatarURL });
+    res.json({
+        avatarURL,
+    })
+
+
+}
+
 module.exports = {
     register: ctrlWrapper(register),
     login: ctrlWrapper(login), 
     getCurrent: ctrlWrapper(getCurrent),
     logout: ctrlWrapper(logout),
+    updateAvatar: ctrlWrapper(updateAvatar),
+
 }
